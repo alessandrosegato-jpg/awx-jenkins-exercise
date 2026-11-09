@@ -13,8 +13,9 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'awx-token', variable: 'TOKEN')]) {
                     sh '''
-                        curl -s -H "Authorization: Bearer $TOKEN" http://10.0.2.2:8043/api/v2/jobs/$AWX_JOB_ID/ -o job.json
+                        curl -sf -H "Authorization: Bearer $TOKEN" http://10.0.2.2:8043/api/v2/jobs/$AWX_JOB_ID/ -o job.json
                         grep -o '"source_b64":"[^"]*"' job.json | cut -d'"' -f4 | base64 -d > Example.java
+                        test -s Example.java
                         cat Example.java
                     '''
                 }
