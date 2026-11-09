@@ -1,0 +1,30 @@
+---
+- name: Preleva il sorgente Java dalla VM
+  hosts: all
+  gather_facts: false
+  vars:
+    source_path: /opt/sources/Example.java
+
+  tasks:
+    - name: Controlla che il file esista
+      ansible.builtin.stat:
+        path: "{{ source_path }}"
+      register: src_stat
+
+    - name: Fallisci se il file non c'è
+      ansible.builtin.assert:
+        that: src_stat.stat.exists
+        fail_msg: "{{ source_path }} non trovato su {{ inventory_hostname }}"
+
+    - name: Leggi il file (Ansible lo restituisce in base64)
+      ansible.builtin.slurp:
+        src: "{{ source_path }}"
+      register: src_file
+
+    - name: Salva il contenuto negli artifacts del job AWX
+      ansible.builtin.set_stats:
+        data:
+          source_name: "{{ source_path | basename }}"
+          source_b64: "{{ src_file.content }}"
+          source_host: "{{ inventory_hostname }}"
+        per_host: false
